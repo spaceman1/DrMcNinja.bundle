@@ -58,12 +58,17 @@ def MainMenu():
 def IssueMenu(sender, offset):
 	dir = MediaContainer(title2=sender.itemTitle)
 	seriesArray = JSON.ObjectFromString(HTTP.Request('http://drmcninja.com/mcninja-js.php?ver=1.0').content.split('series_arr = ')[1].split(';\n')[0])
+	pageIndex = 1
 	if offset == 18: # AxeCop Cross-over
 		for i in range(1, 5):
 			dir.Append(PhotoItem('http://axecop.com/images/uploads/axecopMC%i.png' % i, title='19p%i' % i))
+		pageIndex = 6
 	for item in seriesArray[offset]['posts']:
-		comic = HTML.ElementFromURL('http://drmcninja.com/archives/comic/' + item, cacheTime=CACHE_1YEAR).xpath('//div[@id="comic"]/img')[0]
-		title = comic.get('title')
-		url = comic.get('src')
-		dir.Append(PhotoItem(url, title=title))
+		comicURL = 'http://drmcninja.com/archives/comic/' + item
+		title = 'p%i' % pageIndex
+		pageIndex += 1
+		dir.Append(Function(PhotoItem(GetPhotoItem, title=title, thumb=Function(GetPhotoItem, url=comicURL)), url=comicURL))
 	return dir
+
+def GetPhotoItem(url, sender=None):
+	return Redirect(HTML.ElementFromURL(url).xpath('//div[@id="comic"]/img')[0].get('src'))
